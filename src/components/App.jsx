@@ -20,11 +20,14 @@ export default function App() {
  const searchImages = async searchQuery => {
     try {
       setisLoading(true);
+
       const galleryImages = await Api.galleryCardsApi(searchQuery, 1, itemsPerPage);
+
       setPage(1);
       setQuery(searchQuery);
       setImages(galleryImages.hits);
       setloadMoreAllowed(galleryImages.hits.length < galleryImages.totalHits);
+
       setisLoading(false);
       
     } catch (error) {
@@ -35,11 +38,14 @@ export default function App() {
   const loadMore = async () => {
     try {
       setisLoading(true);
+
       const galleryImages = await Api.galleryCardsApi(query, page + 1, itemsPerPage);
+
       setPage( page + 1 );
       setImages([...images, ...galleryImages.hits]);
       setloadMoreAllowed(        
-          page * itemsPerPage + galleryImages.hits.length < galleryImages.totalHits );
+        page * itemsPerPage + galleryImages.hits.length < galleryImages.totalHits);
+      
       setisLoading(false);
       
     } catch (error) {}
