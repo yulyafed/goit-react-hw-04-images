@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { SearchBar } from './Searchbar/Searchbar';
 import { ImageGalleryBox } from './ImageGallery/ImageGallery';
 import { ButtonLoadMore } from './Button/Button';
@@ -6,68 +6,57 @@ import { Loader } from './Loader/Loader';
 import * as Api from 'services/Api';
 import { Container } from './App.styled';
 
-export class App extends Component {
-  state = {
-    page: 1,
-    query: '',
-    images: [],
-    isLoading: false,
-    loadMoreAllowed: false,
-    error: null,
-  };
+export default function App() {
+  
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
+  const [images, setImages] = useState([]);
+  const [isLoading, setisLoading] = useState(false);
+  const [loadMoreAllowed, setloadMoreAllowed] = useState(false);
+  const [error, setError] = useState(null);
+  
+ const itemsPerPage = 12;
 
-  itemsPerPage = 12;
-
-  searchImages = async searchQuery => {
+ const searchImages = async searchQuery => {
     try {
-      this.setState({ isLoading: true });
-      const galleryImages = await Api.galleryCardsApi(searchQuery, 1, this.itemsPerPage);
-      this.setState({
-        page: 1,
-        query: searchQuery,
-        images: galleryImages.hits,
-        loadMoreAllowed: galleryImages.hits.length < galleryImages.totalHits,
-        isLoading: false,
-      });
+      setisLoading(true);
+      const galleryImages = await Api.galleryCardsApi(searchQuery, 1, itemsPerPage);
+      setPage(1);
+      setQuery(searchQuery);
+      setImages(galleryImages.hits);
+      setloadMoreAllowed(galleryImages.hits.length < galleryImages.totalHits);
+      setisLoading(false);
+      
     } catch (error) {
-      this.setState({
-        error: 'No images found',
-      });
+      setError('No images found');
     }
   };
 
-  loadMore = async () => {
+  const loadMore = async () => {
     try {
-      this.setState({ isLoading: true });
-      const galleryImages = await Api.galleryCardsApi(
-        this.state.query,
-        this.state.page + 1,
-        this.itemsPerPage
-      );
-      this.setState(state => ({
-        page: state.page + 1,
-        images: [...state.images, ...galleryImages.hits],
-        loadMoreAllowed: (state.page * this.itemsPerPage) + galleryImages.hits.length < galleryImages.totalHits,
-        isLoading: false,
-      }));
+      setisLoading(true);
+      const galleryImages = await Api.galleryCardsApi(query, page + 1, itemsPerPage);
+      setPage( page + 1 );
+      setImages([...images, ...galleryImages.hits]);
+      setloadMoreAllowed(        
+          page * itemsPerPage + galleryImages.hits.length < galleryImages.totalHits );
+      setisLoading(false);
+      
     } catch (error) {}
   };
 
-  render() {
-    const { isLoading, images, query, error, loadMoreAllowed } = this.state;
-
-    return (
+     return (
       <Container>
         <Loader isLoading={isLoading} />
         <SearchBar
-          onSubmit={this.searchImages}
+          onSubmit={searchImages}
           isSubmitting={isLoading}
           searchQuery={query}
         />
         {error && <p>{error}</p>}
         {images.length > 0 && <ImageGalleryBox items={images} />}
-        {loadMoreAllowed && <ButtonLoadMore onClick={this.loadMore}/>}
+        {loadMoreAllowed && <ButtonLoadMore onClick={loadMore}/>}
       </Container>
     );
   }
-}
+
